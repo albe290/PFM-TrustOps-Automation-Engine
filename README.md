@@ -4,6 +4,13 @@ Production-minded n8n TrustOps workflow for firm submission validation, duplicat
 
 ---
 
+<h2>Workflow Screenshot</h2>
+<p align="center">
+  <img src="images/workflow-diagram.png" alt="PFM TrustOps Automation Engine Workflow" width="1100"/>
+</p>
+
+
+---
 ## Overview
 
 The **PFM TrustOps Automation Engine** is an n8n-based workflow designed to automate first-pass firm submission triage for a trust-focused platform environment.
