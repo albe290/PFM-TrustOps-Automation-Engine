@@ -1,0 +1,534 @@
+{
+  "name": "PFM TrustOps Automation Engine",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2416,
+        -1680
+      ],
+      "id": "2df3b3f8-1ce9-41a3-875a-e21ec8fae259",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"submission_id\": \"PFM-2026-0001\",\n  \"submitted_at\": \"2026-03-22T10:30:00Z\",\n  \"submitted_by_name\": \"John Doe\",\n  \"submitted_by_email\": \"partnerships@alphacapitalgroup.com\",\n  \"firm_name\": \"Alpha Capital Group\",\n  \"website\": \"https://alphacapitalgroup.com\",\n  \"country_of_registration\": \"UAE\",\n  \"years_in_business\": 1,\n  \"asset_classes\": [\"Forex\", \"Indices\", \"Crypto\"],\n  \"max_allocation\": 200000,\n  \"profit_split\": 90,\n  \"challenge_fee\": 549,\n  \"support_email\": \"support@alphacapitalgroup.com\",\n  \"support_contact_present\": true,\n  \"company_description\": \"Global prop trading firm focused on forex and indices.\",\n  \"status_page_url\": \"https://status.alphacapitalgroup.com\",\n  \"terms_url\": \"https://alphacapitalgroup.com/terms\",\n  \"refund_policy_url\": \"https://alphacapitalgroup.com/refund-policy\",\n  \"declared_payout_frequency\": \"Bi-weekly\",\n  \"notes\": \"Submitted through partnership intake form\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2192,
+        -1680
+      ],
+      "id": "04490fae-ad76-4e65-9416-0e88dce1cdd8",
+      "name": "Set Mock Firm Submission"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nconst errors = [];\n\n// Helper function\nfunction isValidEmail(email) {\n  return typeof email === 'string' && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);\n}\n\n// Required fields\nconst requiredFields = [\n  \"submission_id\",\n  \"submitted_at\",\n  \"submitted_by_email\",\n  \"firm_name\",\n  \"website\",\n  \"country_of_registration\",\n  \"years_in_business\",\n  \"profit_split\",\n  \"challenge_fee\",\n  \"support_email\"\n];\n\nfor (const field of requiredFields) {\n  if (\n    item[field] === undefined ||\n    item[field] === null ||\n    item[field] === \"\"\n  ) {\n    errors.push(`Missing required field: ${field}`);\n  }\n}\n\n// Email validation\nif (item.submitted_by_email && !isValidEmail(item.submitted_by_email)) {\n  errors.push(\"Invalid submitted_by_email format\");\n}\n\nif (item.support_email && !isValidEmail(item.support_email)) {\n  errors.push(\"Invalid support_email format\");\n}\n\n// Website validation\nif (item.website && !String(item.website).startsWith(\"https://\")) {\n  errors.push(\"Website must start with https://\");\n}\n\n// Numeric validation\nif (item.years_in_business !== undefined && Number(item.years_in_business) < 0) {\n  errors.push(\"years_in_business cannot be negative\");\n}\n\nif (\n  item.profit_split !== undefined &&\n  (Number(item.profit_split) < 0 || Number(item.profit_split) > 100)\n) {\n  errors.push(\"profit_split must be between 0 and 100\");\n}\n\nif (item.challenge_fee !== undefined && Number(item.challenge_fee) < 0) {\n  errors.push(\"challenge_fee cannot be negative\");\n}\n\n// Array validation\nif (\n  item.asset_classes !== undefined &&\n  !Array.isArray(item.asset_classes)\n) {\n  errors.push(\"asset_classes must be an array\");\n}\n\nconst is_valid = errors.length === 0;\n\nreturn [\n  {\n    json: {\n      ...item,\n      is_valid,\n      validation_errors: errors,\n      validation_status: is_valid ? \"VALID\" : \"INVALID\"\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1968,
+        -1680
+      ],
+      "id": "b42c6dae-d1c7-4084-b5d2-0958400dc447",
+      "name": "Validate Submission"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "248b621f-62d7-4652-8599-7cb8738fc2a2",
+              "leftValue": "={{ $json.is_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1744,
+        -1680
+      ],
+      "id": "6929ad75-af4b-4611-b132-132fb557483c",
+      "name": "Is Submission Valid?"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"route_status\": \"VALID_SUBMISSION\",\n  \"next_step\": \"PROCEED_TO_DUPLICATE_CHECK\",\n  \"message\": \"Submission passed validation and is ready for duplicate review.\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2416,
+        -1264
+      ],
+      "id": "4a8eede1-1875-4121-be97-11f6cb97eda9",
+      "name": "Valid Submission Placeholder"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"route_status\": \"INVALID_SUBMISSION\",\n  \"next_step\": \"STOP_AND_LOG\",\n  \"message\": \"Submission failed validation and should be routed for correction or review.\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1520,
+        -1584
+      ],
+      "id": "14b2e1bb-9b39-40da-8d2d-ed71e9679f6e",
+      "name": "Invalid Submission Placeholder"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"duplicate_found\": false,\n  \"duplicate_match_type\": \"NONE\",\n  \"duplicate_reason\": \"No duplicate match found for firm name, website, or support email.\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1520,
+        -1776
+      ],
+      "id": "c13b213e-7d6e-4278-9cbb-b6d63e89d44a",
+      "name": "Mock Duplicate Check"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c924ed27-23c6-4877-bf59-14dd42efa9e7",
+              "leftValue": "={{ $json.duplicate_found }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1296,
+        -1776
+      ],
+      "id": "516fb89a-698b-45df-b1af-6b19e378a9a1",
+      "name": "Is Duplicate Found?"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"route_status\": \"DUPLICATE_REVIEW\",\n  \"next_step\": \"HUMAN_REVIEW_DUPLICATE\",\n  \"message\": \"Potential duplicate submission detected and routed for analyst review.\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1072,
+        -1872
+      ],
+      "id": "6a38948c-76ff-4e61-9a9d-9fb3211df850",
+      "name": "Duplicate Review Placeholder"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"route_status\": \"CLEAN_SUBMISSION\",\n  \"next_step\": \"PROCEED_TO_RISK_SCORING\",\n  \"message\": \"No duplicate found. Submission is ready for risk scoring.\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1072,
+        -1680
+      ],
+      "id": "f3dfbd89-4e1b-442d-bc67-3bbad3f90f5a",
+      "name": "Clean Submission Placeholder"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\nlet risk_score = 0;\nlet risk_reasons = [];\n\n// Rule 1: Newer firms carry more uncertainty\nif (Number(item.years_in_business) < 2) {\n  risk_score += 25;\n  risk_reasons.push(\"Firm is under 2 years in business\");\n}\n\n// Rule 2: Missing support contact increases operational risk\nif (!item.support_email || item.support_email === \"\") {\n  risk_score += 20;\n  risk_reasons.push(\"Missing support email\");\n}\n\n// Rule 3: Missing terms URL reduces transparency\nif (!item.terms_url || item.terms_url === \"\") {\n  risk_score += 15;\n  risk_reasons.push(\"Missing terms URL\");\n}\n\n// Rule 4: Missing refund policy reduces trust transparency\nif (!item.refund_policy_url || item.refund_policy_url === \"\") {\n  risk_score += 15;\n  risk_reasons.push(\"Missing refund policy URL\");\n}\n\n// Rule 5: Missing status page may indicate lower operational maturity\nif (!item.status_page_url || item.status_page_url === \"\") {\n  risk_score += 10;\n  risk_reasons.push(\"Missing status page URL\");\n}\n\n// Rule 6: Very high profit split can be a risk signal\nif (Number(item.profit_split) > 95) {\n  risk_score += 15;\n  risk_reasons.push(\"Unusually high profit split\");\n}\n\n// Rule 7: High challenge fee may increase review interest\nif (Number(item.challenge_fee) > 700) {\n  risk_score += 10;\n  risk_reasons.push(\"High challenge fee\");\n}\n\n// Assign risk level\nlet risk_level = \"LOW\";\nif (risk_score >= 50) {\n  risk_level = \"HIGH\";\n} else if (risk_score >= 25) {\n  risk_level = \"MEDIUM\";\n}\n\nreturn [\n  {\n    json: {\n      ...item,\n      risk_score,\n      risk_level,\n      risk_reasons\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -848,
+        -1680
+      ],
+      "id": "39a66699-a592-4fbb-8428-90a1511f636a",
+      "name": "Score Risk"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.risk_level }}",
+                    "rightValue": "LOW",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ec06c1d7-0ea5-4632-8822-467c18b5af09"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "695c8981-758b-43ba-aa18-3c6d5383addf",
+                    "leftValue": "={{ $json.risk_level }}",
+                    "rightValue": "MEDIUM",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2e95f205-ac6f-4fd7-ba1f-474d3821bb24",
+                    "leftValue": "={{ $json.risk_level }}",
+                    "rightValue": "HIGH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -624,
+        -1696
+      ],
+      "id": "fb873ea2-a95e-4133-8e6c-c88dc54aec20",
+      "name": "Route by Risk Level"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"route_status\": \"LOW_RISK_FAST_TRACK\",\n  \"next_step\": \"AUTO_ADVANCE_OR_LIGHT_REVIEW\",\n  \"message\": \"Submission scored as low risk and is eligible for fast-track handling.\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        -1872
+      ],
+      "id": "86e9fe66-bb08-434b-ade7-5ec9702b4349",
+      "name": "Low Risk Placeholder"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"route_status\": \"MEDIUM_RISK_REVIEW\",\n  \"next_step\": \"ANALYST_REVIEW\",\n  \"message\": \"Submission scored as medium risk and should be reviewed by an analyst.\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        -1680
+      ],
+      "id": "8056ccf9-0251-4301-8312-53a8d1f21410",
+      "name": "Medium Risk Review Placeholder"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"route_status\": \"HIGH_RISK_ESCALATION\",\n  \"next_step\": \"ESCALATE_FOR_MANUAL_APPROVAL\",\n  \"message\": \"Submission scored as high risk and requires escalated review.\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        -1488
+      ],
+      "id": "0b35564c-8ada-406f-9763-221f4133b3f4",
+      "name": "High Risk Escalation Placeholder"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"audit_event_type\": \"FIRM_SUBMISSION_TRIAGED\",\n  \"audit_workflow_name\": \"PFM TrustOps Automation Engine\",\n  \"audit_decision_stage\": \"RISK_ROUTING\",\n  \"audit_outcome\": \"MEDIUM_RISK_REVIEW\",\n  \"audit_next_step\": \"ANALYST_REVIEW\",\n  \"audit_summary\": \"Submission validated, no duplicate found, scored as medium risk, and routed to analyst review.\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -176,
+        -1680
+      ],
+      "id": "2b3bd7ea-71af-488e-a295-a9148dd2288e",
+      "name": "Prepare Audit Log"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"notification_channel\": \"ANALYST_QUEUE\",\n  \"notification_priority\": \"MEDIUM\",\n  \"notification_subject\": \"Prop firm submission requires analyst review\",\n  \"notification_message\": \"Alpha Capital Group was validated successfully, no duplicate was found, and the submission scored MEDIUM risk with a score of 25. Primary reason: Firm is under 2 years in business.\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        -1680
+      ],
+      "id": "44b8dbe3-045e-491d-a5a4-8a4fd7803160",
+      "name": "Prepare Reviewer Notification"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Set Mock Firm Submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Mock Firm Submission": {
+      "main": [
+        [
+          {
+            "node": "Validate Submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Submission": {
+      "main": [
+        [
+          {
+            "node": "Is Submission Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Submission Valid?": {
+      "main": [
+        [
+          {
+            "node": "Mock Duplicate Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Submission Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Submission Placeholder": {
+      "main": [
+        []
+      ]
+    },
+    "Mock Duplicate Check": {
+      "main": [
+        [
+          {
+            "node": "Is Duplicate Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Duplicate Found?": {
+      "main": [
+        [
+          {
+            "node": "Duplicate Review Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clean Submission Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Submission Placeholder": {
+      "main": [
+        [
+          {
+            "node": "Score Risk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Risk": {
+      "main": [
+        [
+          {
+            "node": "Route by Risk Level",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Risk Level": {
+      "main": [
+        [
+          {
+            "node": "Low Risk Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Medium Risk Review Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "High Risk Escalation Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Medium Risk Review Placeholder": {
+      "main": [
+        [
+          {
+            "node": "Prepare Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Audit Log": {
+      "main": [
+        [
+          {
+            "node": "Prepare Reviewer Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "82a4ac70-4cfe-4f57-abca-efb5ff3efde3",
+  "meta": {
+    "instanceId": "5a022662c10b234189b0ca1e9f236aaaf7f51328ba3056ed295bab621fee01ec"
+  },
+  "id": "wzRn8wJ2cC4DJrUD",
+  "tags": []
+}
