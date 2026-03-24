@@ -11,6 +11,23 @@ Production-minded n8n TrustOps workflow for firm submission validation, duplicat
 
 
 ---
+## Workflow File
+
+The exported n8n workflow file used for this project is included in the repository:
+
+- [trustops_workflow.json](workflow/trustops_workflow.json)
+
+This file contains the current workflow canvas for the PFM TrustOps Automation Engine, including:
+- submission validation
+- valid / invalid branching
+- duplicate detection routing
+- deterministic risk scoring
+- low / medium / high risk routing
+- medium-risk audit log preparation
+- reviewer notification preparation
+
+
+---
 ## Overview
 
 The **PFM TrustOps Automation Engine** is an n8n-based workflow designed to automate first-pass firm submission triage for a trust-focused platform environment.
